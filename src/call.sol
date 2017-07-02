@@ -29,19 +29,15 @@ contract ProxyCall {
 contract TransactionManager {
 
     function execute(bytes balances) {
-        //uint8 balances_length = balances.length / 64;
         address token;
         uint256 value;
 
-        address source = 0x002ca7F9b416B2304cDd20c26882d1EF5c53F611;
-        address target = 0x00348E4084567Ce2E962B64ABe5A54BaB256Bc26;
-
+        // transfer balances
         assembly {
             token := div(and(mload(add(balances, 0x20)), 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000), 0x1000000000000000000000000)
             value := mload(add(balances, 0x34))
-
         }
-        ERC20(token).transferFrom(source, target, value);
+        ERC20(token).transferFrom(msg.sender, this, value);
     }
 }
 
