@@ -33,11 +33,19 @@ contract TransactionManager {
         uint256 value;
 
         // transfer balances
-        assembly {
-            token := div(and(mload(add(balances, 0x20)), 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000), 0x1000000000000000000000000)
-            value := mload(add(balances, 0x34))
+        for (uint i = 0; i < balances.length/52; i++) {
+            assembly {
+                token := div(and(mload(add(add(balances, 0x20), mul(0x34, i))), 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000), 0x1000000000000000000000000)
+                value := mload(add(add(balances, 0x34), mul(0x34, i)))
+            }
+            ERC20(token).transferFrom(msg.sender, this, value);
         }
-        ERC20(token).transferFrom(msg.sender, this, value);
+
+        // execute steps
+        // TODO
+
+        // transfer remaining balances back to the initiator
+        ERC20(token).transfer(msg.sender, ERC20(token).balanceOf(this));
     }
 }
 
