@@ -5,36 +5,43 @@ import "erc20/erc20.sol";
 contract TransactionManager {
 
     function execute(bytes balances, bytes steps) {
-        // transfer balances from the caller to the contract
-        for (uint i = 0; i < balances.length/52; i++) {
-            address token = getAddressAt(balances, 0x34*i);
-            uint256 value = getWordAt(balances, 0x34*i + 0x14);
-
-            ERC20(token).transferFrom(msg.sender, this, value);
-        }
-
-        // execute steps
-        uint256 stepLocation = 0;
-        while (stepLocation < steps.length) {
-            uint256 stepLength = getWordAt(steps, stepLocation);
-            address stepAddress = getAddressAt(steps, stepLocation + 0x20);
-
-            assembly {
-                let succeeded := call(sub(gas, 5000), stepAddress, 0, add(add(add(steps, 0x20), stepLocation), 0x34), sub(stepLength, 0x14), 0, 0)
-                jumpi(invalidJumpLabel, iszero(succeeded))
-            }
-            stepLocation = stepLocation + 0x20 + stepLength;
-        }
+        pullBalances(balances);
+        callContracts(steps);
 
         returnBalances(balances);
     }
 
-    // transfer remaining balances back to the caller
-    function returnBalances(bytes balances) internal {
-        for (uint i = 0; i < balances.length/52; i++) {
-            address token = getAddressAt(balances, 0x34*i);
+    // pulls requested amount of each token from the sender
+    function pullBalances(bytes balancesData) internal {
+        for (uint index = 0; index < balancesData.length/0x34; index++) {
+            address token = getAddressAt(balancesData, 0x34*index);
+            uint256 value = getWordAt(balancesData, 0x34*index + 0x14);
+
+            ERC20(token).transferFrom(msg.sender, this, value);
+        }
+    }
+
+    // returns remaining balances of each token to the sender
+    function returnBalances(bytes balancesData) internal {
+        for (uint index = 0; index < balancesData.length/0x34; index++) {
+            address token = getAddressAt(balancesData, 0x34*index);
 
             ERC20(token).transfer(msg.sender, ERC20(token).balanceOf(this));
+        }
+    }
+
+    function callContracts(bytes stepsData) internal {
+        // execute steps
+        uint256 stepLocation = 0;
+        while (stepLocation < stepsData.length) {
+            uint256 stepLength = getWordAt(stepsData, stepLocation);
+            address stepAddress = getAddressAt(stepsData, stepLocation + 0x20);
+
+            assembly {
+                let succeeded := call(sub(gas, 5000), stepAddress, 0, add(add(add(stepsData, 0x20), stepLocation), 0x34), sub(stepLength, 0x14), 0, 0)
+                jumpi(invalidJumpLabel, iszero(succeeded))
+            }
+            stepLocation = stepLocation + 0x20 + stepLength;
         }
     }
 
