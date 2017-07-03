@@ -50,11 +50,6 @@ contract TransactionManager {
             result := div(and(word, 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000), 0x1000000000000000000000000)
         }
     }
-
-    function getBytesAt(bytes array, uint256 location, uint256 length) internal returns (bytes memory result) {
-        result = new bytes(length);
-        //TODO
-    }
 }
 
 contract TestContract {
