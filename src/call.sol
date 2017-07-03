@@ -1,20 +1,23 @@
 pragma solidity ^0.4.11;
 
 import "ds-auth/auth.sol";
+import "ds-math/math.sol";
 import "ds-note/note.sol";
 import "erc20/erc20.sol";
 
-contract TransactionManager is DSAuth, DSNote {
+contract TransactionManager is DSAuth, DSMath, DSNote {
 
     function execute(address[] tokens, bytes script) {
-        // pull the entire amount of each token from the sender
-        for (uint i = 0; i < tokens.length; i++)
-            ERC20(tokens[i]).transferFrom(msg.sender, this, ERC20(tokens[i]).balanceOf(msg.sender));
+        // pull the entire allowance of each token from the sender
+        for (uint i = 0; i < tokens.length; i++) {
+            uint256 amount = min(ERC20(tokens[i]).balanceOf(msg.sender), ERC20(tokens[i]).allowance(msg.sender, this));
+            ERC20(tokens[i]).transferFrom(msg.sender, this, amount);
+        }
 
         // sequentially call contacts, abort on failed calls
         invokeContracts(script);
 
-        // returns remaining balances of each token to the sender
+        // return entire remaining balances of each token to the sender
         for (uint j = 0; j < tokens.length; j++)
             ERC20(tokens[j]).transfer(msg.sender, ERC20(tokens[j]).balanceOf(this));
     }
