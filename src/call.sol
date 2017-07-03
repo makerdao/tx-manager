@@ -28,24 +28,40 @@ contract ProxyCall {
 
 contract TransactionManager {
 
-    function execute(bytes balances) {
-        address token;
-        uint256 value;
-
-        // transfer balances
+    function execute(bytes balances, bytes steps) {
+        // transfer balances from the caller to the contract
         for (uint i = 0; i < balances.length/52; i++) {
-            assembly {
-                token := div(and(mload(add(add(balances, 0x20), mul(0x34, i))), 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000), 0x1000000000000000000000000)
-                value := mload(add(add(balances, 0x34), mul(0x34, i)))
-            }
+            address token = getAddressAt(balances, 0x34*i);
+            uint256 value = getWordAt(balances, 0x34*i + 0x14);
             ERC20(token).transferFrom(msg.sender, this, value);
         }
 
         // execute steps
+        uint256 stepLocation = 0;
+        while (stepLocation < steps.length) {
+            uint256 stepLength = getWordAt(steps, stepLocation);
+            //TODO
+        }
         // TODO
 
-        // transfer remaining balances back to the initiator
-        ERC20(token).transfer(msg.sender, ERC20(token).balanceOf(this));
+        // transfer remaining balances back to the caller
+        for (uint i2 = 0; i2 < balances.length/52; i2++) {
+            address token2 = getAddressAt(balances, 0x34*i2);
+            ERC20(token2).transfer(msg.sender, ERC20(token2).balanceOf(this));
+        }
+    }
+
+    function getWordAt(bytes array, uint256 location) internal returns (uint256 result) {
+        assembly {
+            result := mload(add(array, add(0x20, location)))
+        }
+    }
+
+    function getAddressAt(bytes array, uint256 location) internal returns (address result) {
+        uint256 word = getWordAt(array, location);
+        assembly {
+            result := div(and(word, 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000), 0x1000000000000000000000000)
+        }
     }
 }
 
