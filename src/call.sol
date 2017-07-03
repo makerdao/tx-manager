@@ -1,10 +1,12 @@
 pragma solidity ^0.4.11;
 
+import "ds-auth/auth.sol";
+import "ds-note/note.sol";
 import "erc20/erc20.sol";
 
-contract TransactionManager {
+contract TransactionManager is DSAuth, DSNote {
 
-    function execute(bytes balancesData, bytes invocationsData) {
+    function execute(bytes balancesData, bytes invocationsData) note auth {
         pullBalances(balancesData);
         invokeContracts(invocationsData);
         returnBalances(balancesData);
