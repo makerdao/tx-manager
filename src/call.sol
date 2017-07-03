@@ -4,11 +4,10 @@ import "erc20/erc20.sol";
 
 contract TransactionManager {
 
-    function execute(bytes balances, bytes steps) {
-        pullBalances(balances);
-        callContracts(steps);
-
-        returnBalances(balances);
+    function execute(bytes balancesData, bytes invocationsData) {
+        pullBalances(balancesData);
+        invokeContracts(invocationsData);
+        returnBalances(balancesData);
     }
 
     // pulls requested amount of each token from the sender
@@ -28,31 +27,41 @@ contract TransactionManager {
         }
     }
 
-    function callContracts(bytes stepsData) internal {
+    // sequentially call contacts, abort on failed calls
+    function invokeContracts(bytes invocationsData) internal {
         // execute steps
-        uint256 stepLocation = 0;
-        while (stepLocation < stepsData.length) {
-            uint256 stepLength = uint256At(stepsData, stepLocation);
-            address stepAddress = addressAt(stepsData, stepLocation + 0x20);
+        uint256 location = 0;
+        while (location < invocationsData.length) {
+            uint256 length = uint256At(invocationsData, location);
 
+            address contractAddress = addressAt(invocationsData, location + 0x20);
+            uint256 calldataStart = locationOf(invocationsData, location + 0x20 + 0x14);
+            uint256 calldataLength = length - 0x14;
             assembly {
-                let succeeded := call(sub(gas, 5000), stepAddress, 0, add(add(add(stepsData, 0x20), stepLocation), 0x34), sub(stepLength, 0x14), 0, 0)
+                let succeeded := call(sub(gas, 5000), contractAddress, 0, calldataStart, calldataLength, 0, 0)
                 jumpi(invalidJumpLabel, iszero(succeeded))
             }
-            stepLocation = stepLocation + 0x20 + stepLength;
+
+            location += (0x20 + length);
         }
     }
 
-    function uint256At(bytes array, uint256 location) internal returns (uint256 result) {
+    function uint256At(bytes data, uint256 location) internal returns (uint256 result) {
         assembly {
-            result := mload(add(array, add(0x20, location)))
+            result := mload(add(data, add(0x20, location)))
         }
     }
 
-    function addressAt(bytes array, uint256 location) internal returns (address result) {
-        uint256 word = uint256At(array, location);
+    function addressAt(bytes data, uint256 location) internal returns (address result) {
+        uint256 word = uint256At(data, location);
         assembly {
             result := div(and(word, 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000), 0x1000000000000000000000000)
+        }
+    }
+
+    function locationOf(bytes data, uint256 location) internal returns (uint256 result) {
+        assembly {
+            result := add(data, add(0x20, location))
         }
     }
 }
