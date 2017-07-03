@@ -51,12 +51,3 @@ contract TransactionManager {
         }
     }
 }
-
-contract TestContract {
-    uint256 public counter;
-
-    function inc(uint256 value) {
-        counter += value;
-    }
-}
-
