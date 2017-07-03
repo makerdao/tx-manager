@@ -6,25 +6,25 @@ import "erc20/erc20.sol";
 
 contract TransactionManager is DSAuth, DSNote {
 
-    function execute(bytes balancesData, bytes invocationsData) note auth {
-        pullBalances(balancesData);
+    function execute(address[] tokens, bytes invocationsData) {
+        pullBalances(tokens);
         invokeContracts(invocationsData);
-        returnBalances(balancesData);
+        returnBalances(tokens);
     }
 
     // pulls requested amount of each token from the sender
-    function pullBalances(bytes balancesData) internal {
-        for (uint index = 0; index < balancesData.length/0x34; index++) {
-            address token = addressAt(balancesData, 0x34*index);
-            uint256 value = uint256At(balancesData, 0x34*index + 0x14);
+    function pullBalances(address[] tokens) internal {
+        for (uint i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            uint256 value = ERC20(token).balanceOf(msg.sender);
             ERC20(token).transferFrom(msg.sender, this, value);
         }
     }
 
     // returns remaining balances of each token to the sender
-    function returnBalances(bytes balancesData) internal {
-        for (uint index = 0; index < balancesData.length/0x34; index++) {
-            address token = addressAt(balancesData, 0x34*index);
+    function returnBalances(address[] tokens) internal {
+        for (uint i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
             ERC20(token).transfer(msg.sender, ERC20(token).balanceOf(this));
         }
     }
