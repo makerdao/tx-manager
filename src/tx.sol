@@ -25,7 +25,7 @@ import "ds-math/math.sol";
 import "ds-note/note.sol";
 import "erc20/erc20.sol";
 
-contract TransactionManager is DSAuth, DSMath, DSNote {
+contract TxManager is DSAuth, DSMath, DSNote {
 
     function execute(address[] tokens, bytes script) {
         // pull the entire allowance of each token from the sender
