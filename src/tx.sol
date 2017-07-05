@@ -1,3 +1,6 @@
+/// tx.sol -- multiple smart contract calls in one transaction,
+///           involving ERC20 tokens interaction
+
 // This file is part of Maker Keeper Framework.
 //
 // Copyright (C) 2017 reverendus
