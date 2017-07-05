@@ -27,7 +27,7 @@ import "erc20/erc20.sol";
 
 contract TxManager is DSAuth, DSMath, DSNote {
 
-    function execute(address[] tokens, bytes script) {
+    function execute(address[] tokens, bytes script) note auth {
         // pull the entire allowance of each token from the sender
         for (uint i = 0; i < tokens.length; i++) {
             uint256 amount = min(ERC20(tokens[i]).balanceOf(msg.sender), ERC20(tokens[i]).allowance(msg.sender, this));
