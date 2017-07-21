@@ -16,6 +16,10 @@ contract Tester {
         value = value_;
     }
 
+    function balance() {
+        value = token.balanceOf(msg.sender);
+    }
+
     function fail() {
         throw;
     }
@@ -31,7 +35,7 @@ contract TxManagerTest is DSTest {
     function setUp() {
         tx = new TxManager();
         token1 = new DSTokenBase(1000000);
-        token2 = new DSTokenBase(1000000);
+        token2 = new DSTokenBase(2000000);
         tester1 = new Tester(token1);
         tester2 = new Tester(token2);
     }
@@ -80,6 +84,62 @@ contract TxManagerTest is DSTest {
         tx.execute(new address[](0), call);
     }
 
+    function testNoTokenTransferIfNotApproved() {
+        // seth calldata 'balance()'
+        bytes memory data = "\xb6\x9e\xf8\xa8";
+        bytes memory call = joinBytes(addressToBytes(tester1), uintToBytes(data.length), data);
+
+        tx.execute(tokens(token1), call);
+
+        assertEq(tester1.value(), 0);
+    }
+
+    function testTransferTokenAllowanceAndReturnFunds() {
+        token1.approve(tx, 1000);
+
+        // seth calldata 'balance()'
+        bytes memory data = "\xb6\x9e\xf8\xa8";
+        bytes memory call = joinBytes(addressToBytes(tester1), uintToBytes(data.length), data);
+
+        tx.execute(tokens(token1), call);
+
+        assertEq(tester1.value(), 1000);
+        assertEq(token1.balanceOf(this), 1000000);
+    }
+
+    function testTransferNoMoreThanTokenBalance() {
+        token1.approve(tx, 1000000000000);
+
+        // seth calldata 'balance()'
+        bytes memory data = "\xb6\x9e\xf8\xa8";
+        bytes memory call = joinBytes(addressToBytes(tester1), uintToBytes(data.length), data);
+
+        tx.execute(tokens(token1), call);
+
+        assertEq(tester1.value(), 1000000);
+    }
+
+    function testTransferTwoTokensAndReturnFunds() {
+        token1.approve(tx, 1000);
+        token2.approve(tx, 1500);
+
+        // seth calldata 'balance()'
+        bytes memory data1 = "\xb6\x9e\xf8\xa8";
+        bytes memory call1 = joinBytes(addressToBytes(tester1), uintToBytes(data1.length), data1);
+        // seth calldata 'balance()'
+        bytes memory data2 = "\xb6\x9e\xf8\xa8";
+        bytes memory call2 = joinBytes(addressToBytes(tester2), uintToBytes(data2.length), data2);
+
+        tx.execute(tokens(token1, token2), joinBytes(call1, call2));
+
+        assertEq(tester1.value(), 1000);
+        assertEq(tester2.value(), 1500);
+
+        // check if funds returned after calls have been made
+        assertEq(token1.balanceOf(this), 1000000);
+        assertEq(token2.balanceOf(this), 2000000);
+    }
+
     // --- --- ---
 
     function uintToBytes(uint256 x) internal returns (bytes b) {
@@ -108,5 +168,18 @@ contract TxManagerTest is DSTest {
         for (i = 0; i < b.length; i++) result[k++] = b[i];
         for (i = 0; i < c.length; i++) result[k++] = c[i];
         return result;
+    }
+
+    function tokens(address a1) returns (address[]) {
+        address[] memory tokens = new address[](1);
+        tokens[0] = a1;
+        return tokens;
+    }
+
+    function tokens(address a1, address a2) returns (address[]) {
+        address[] memory tokens = new address[](2);
+        tokens[0] = a1;
+        tokens[1] = a2;
+        return tokens;
     }
 }
