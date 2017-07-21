@@ -45,17 +45,15 @@ contract TxManager is DSAuth, DSMath, DSNote {
     function invokeContracts(bytes script) internal {
         uint256 location = 0;
         while (location < script.length) {
-            uint256 length = uint256At(script, location);
-
-            address contractAddress = addressAt(script, location + 0x20);
-            uint256 calldataStart = locationOf(script, location + 0x20 + 0x14);
-            uint256 calldataLength = length - 0x14;
+            address contractAddress = addressAt(script, location);
+            uint256 calldataLength = uint256At(script, location + 0x14);
+            uint256 calldataStart = locationOf(script, location + 0x14 + 0x20);
             assembly {
                 let ok := call(sub(gas, 5000), contractAddress, 0, calldataStart, calldataLength, 0, 0)
                 jumpi(invalidJumpLabel, iszero(ok))
             }
 
-            location += (0x20 + length);
+            location += (0x14 + 0x20 + calldataLength);
         }
     }
 

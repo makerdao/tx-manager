@@ -50,18 +50,16 @@ contract calls to be made. It consists of multiple call records concatenated
 together, whereas each record is built as follows:
 
 ```
-+----------------+-------------+----------------...------+
-|     length     |   address   |         calldata        |
-|                |             |                         |
-|   (32 bytes)   |  (20 bytes) |                         |
-+----------------+-------------+----------------...------+
++-----------------+---------------------+-----------------------...------+
+|     address     |   calldata length   |         calldata               |
+|                 |                     |                                |
+|   (20 bytes)    |      (32 bytes)     |                                |
++-----------------+---------------------+-----------------------...------+
 
 ```
 
-`length` is the size of `address` and `calldata` in bytes.
-
 For example, if you want to make one call to `0x11111222223333344444333332222211111122222`,
-the script may look like this `000000000000000000000000000000000000000000000000000000000000003811111222223333344444333332222211111122222a39f1c6c0000000000000000000000000000000000000000000000000000000000000064`,
+the script may look like this `111112222233333444443333322222111111222220000000000000000000000000000000000000000000000000000000000000024a39f1c6c0000000000000000000000000000000000000000000000000000000000000064`,
 the last part of it being calldata encoded with:
 
 ```bash
