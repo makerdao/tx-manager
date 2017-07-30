@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import "ds-auth/auth.sol";
 import "ds-math/math.sol";
@@ -48,10 +48,11 @@ contract TxManager is DSAuth, DSMath, DSNote {
             address contractAddress = addressAt(script, location);
             uint256 calldataLength = uint256At(script, location + 0x14);
             uint256 calldataStart = locationOf(script, location + 0x14 + 0x20);
+            uint8 ok;
             assembly {
-                let ok := call(sub(gas, 5000), contractAddress, 0, calldataStart, calldataLength, 0, 0)
-                jumpi(invalidJumpLabel, iszero(ok))
+                ok := call(sub(gas, 5000), contractAddress, 0, calldataStart, calldataLength, 0, 0)
             }
+            if (ok == 0) revert();
 
             location += (0x14 + 0x20 + calldataLength);
         }
