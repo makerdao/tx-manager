@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.13;
 
 import "ds-test/test.sol";
 import "ds-token/base.sol";
@@ -21,7 +21,7 @@ contract Tester {
     }
 
     function fail() {
-        throw;
+        revert();
     }
 }
 
