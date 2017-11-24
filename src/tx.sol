@@ -48,11 +48,12 @@ contract TxManager is DSAuth, DSMath, DSNote {
             address contractAddress = addressAt(script, location);
             uint256 calldataLength = uint256At(script, location + 0x14);
             uint256 calldataStart = locationOf(script, location + 0x14 + 0x20);
-            uint8 ok;
             assembly {
-                ok := call(sub(gas, 5000), contractAddress, 0, calldataStart, calldataLength, 0, 0)
+                switch call(sub(gas, 5000), contractAddress, 0, calldataStart, calldataLength, 0, 0)
+                case 0 {
+                    revert(0, 0)
+                }
             }
-            if (ok == 0) revert();
 
             location += (0x14 + 0x20 + calldataLength);
         }
