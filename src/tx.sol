@@ -27,7 +27,7 @@ import "erc20/erc20.sol";
 
 contract TxManager is DSAuth, DSMath, DSNote {
 
-    function execute(address[] tokens, bytes script) note auth {
+    function execute(address[] tokens, bytes script) public note auth {
         // pull the entire allowance of each token from the sender
         for (uint i = 0; i < tokens.length; i++) {
             uint256 amount = min(ERC20(tokens[i]).balanceOf(msg.sender), ERC20(tokens[i]).allowance(msg.sender, this));
@@ -59,13 +59,13 @@ contract TxManager is DSAuth, DSMath, DSNote {
         }
     }
 
-    function uint256At(bytes data, uint256 location) internal returns (uint256 result) {
+    function uint256At(bytes data, uint256 location) pure internal returns (uint256 result) {
         assembly {
             result := mload(add(data, add(0x20, location)))
         }
     }
 
-    function addressAt(bytes data, uint256 location) internal returns (address result) {
+    function addressAt(bytes data, uint256 location) pure internal returns (address result) {
         uint256 word = uint256At(data, location);
         assembly {
             result := div(and(word, 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000),
@@ -73,7 +73,7 @@ contract TxManager is DSAuth, DSMath, DSNote {
         }
     }
 
-    function locationOf(bytes data, uint256 location) internal returns (uint256 result) {
+    function locationOf(bytes data, uint256 location) pure internal returns (uint256 result) {
         assembly {
             result := add(data, add(0x20, location))
         }
