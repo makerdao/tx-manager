@@ -31,7 +31,7 @@ contract TxManager is DSAuth, DSMath, DSNote {
         // pull the entire allowance of each token from the sender
         for (uint i = 0; i < tokens.length; i++) {
             uint256 amount = min(ERC20(tokens[i]).balanceOf(msg.sender), ERC20(tokens[i]).allowance(msg.sender, this));
-            ERC20(tokens[i]).transferFrom(msg.sender, this, amount);
+            require(ERC20(tokens[i]).transferFrom(msg.sender, this, amount));
         }
 
         // sequentially call contacts, abort on failed calls
@@ -39,7 +39,7 @@ contract TxManager is DSAuth, DSMath, DSNote {
 
         // return entire remaining balances of each token to the sender
         for (uint j = 0; j < tokens.length; j++)
-            ERC20(tokens[j]).transfer(msg.sender, ERC20(tokens[j]).balanceOf(this));
+            require(ERC20(tokens[j]).transfer(msg.sender, ERC20(tokens[j]).balanceOf(this)));
     }
 
     function invokeContracts(bytes script) internal {

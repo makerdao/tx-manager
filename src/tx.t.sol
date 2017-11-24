@@ -25,10 +25,57 @@ contract Tester {
     }
 }
 
+// EtherToken from 0x does not throw/revert on failed transfers as most of other tokens.
+// <https://etherscan.io/address/0x2956356cd2a2bf3202f771f50d3d14a367b48070#code>
+//
+// This tiny contract tries to replicate this behaviour so we can test against it.
+// Every `transfer`/`transferFrom` fails, but there is no throw/revert.
+// Instead of it, `false` gets returned from these functions.
+contract NotThrowingToken is ERC20 {
+    uint256                                            _supply;
+    mapping (address => uint256)                       _balances;
+    mapping (address => mapping (address => uint256))  _approvals;
+
+    event Transfer( address indexed from, address indexed to, uint value);
+    event Approval( address indexed owner, address indexed spender, uint value);
+
+    function NotThrowingToken(uint supply) public {
+        _balances[msg.sender] = supply;
+        _supply = supply;
+    }
+
+    function totalSupply() public view returns (uint) {
+        return _supply;
+    }
+    function balanceOf(address src) public view returns (uint) {
+        return _balances[src];
+    }
+    function allowance(address src, address guy) public view returns (uint) {
+        return _approvals[src][guy];
+    }
+
+    function transfer(address dst, uint wad) public returns (bool) {
+        return false;
+    }
+
+    function transferFrom(address src, address dst, uint wad) public returns (bool) {
+        return false;
+    }
+
+    function approve(address guy, uint wad) public returns (bool) {
+        _approvals[msg.sender][guy] = wad;
+
+        Approval(msg.sender, guy, wad);
+
+        return true;
+    }
+}
+
 contract TxManagerTest is DSTest {
     TxManager tx;
     ERC20     token1;
     ERC20     token2;
+    ERC20     token3;
     Tester    tester1;
     Tester    tester2;
 
@@ -36,6 +83,7 @@ contract TxManagerTest is DSTest {
         tx = new TxManager();
         token1 = new DSTokenBase(1000000);
         token2 = new DSTokenBase(2000000);
+        token3 = new NotThrowingToken(3000000);
         tester1 = new Tester(token1);
         tester2 = new Tester(token2);
     }
@@ -74,6 +122,10 @@ contract TxManagerTest is DSTest {
 
         assertEq(tester1.value(), 10);
         assertEq(tester2.value(), 13);
+    }
+
+    function testFailOnFailedTransfer() {
+        tx.execute(tokens(token3), new bytes(0));
     }
 
     function testFailOnFailedCall() {
