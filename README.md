@@ -27,7 +27,7 @@ the contract:
 
 ```bash
 dapp build
-ETH_GAS=2000000 dapp deploy TxManager
+ETH_GAS=2000000 dapp create TxManager
 ```
 
 
