@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.18;
 
 import "ds-auth/auth.sol";
 import "ds-math/math.sol";
