@@ -14,7 +14,7 @@ the transaction manager contract before the first call is made and returned
 to the caller after the last call.
 
 The transaction manager needs to be approved to access ERC20 tokens.
-Because of that, the transaction manager can be used only by its owner. 
+Because of that, we only allow the transaction manager to be used only by its owner. 
 
 
 Contract deployment
