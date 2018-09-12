@@ -22,7 +22,7 @@ Contract deployment
 
 The `TxManager` contract takes no parameters.
 
-Use Dapp (<https://github.com/dapphub/dapp>) to build and deploy
+Use Dapp (<https://github.com/dapphub/dapptools/>) to build and deploy
 the contract:
 
 ```bash
